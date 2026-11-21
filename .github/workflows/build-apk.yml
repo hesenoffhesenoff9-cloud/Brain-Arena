@@ -1,0 +1,52 @@
+
+name: Brain Arena APK Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'brain-arena-v2_7.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Extract project
+        run: |
+          unzip brain-arena-v2_7.zip -d extracted
+
+      - name: Install and prepare Android
+        run: |
+          cd extracted/brain-arena-v2_7/brain-arena-v1.9
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd extracted/brain-arena-v2_7/brain-arena-v1.9/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brain-Arena-v2.7-APK
+          path: extracted/brain-arena-v2_7/brain-arena-v1.9/android/app/build/outputs/apk/debug/app-debug.apk
+          
